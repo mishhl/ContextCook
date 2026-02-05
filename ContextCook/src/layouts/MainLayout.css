@@ -1,0 +1,30 @@
+a {
+  color: #303030;
+  text-decoration: none;
+  padding: 4px 12px 4px 12px;
+  font-size: 9px;
+}
+
+
+.mainNavBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 60px;
+}
+
+.tabBox {
+    border-color: #303030;
+    border-width: 1px;
+    border-bottom-style: solid;
+}
+
+.mainBody {
+  width: 100%;
+  height: 100%;
+}
+
+p {
+  margin: 0;
+}
