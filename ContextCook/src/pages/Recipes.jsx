@@ -10,15 +10,15 @@ export default function Recipes() {
 
     useEffect(() => {
         const fetchRecipes = async () => {
-        try {
-            const response = await fetch(`${SERVER}/api/recipes/first-five`);
-            const data = await response.json();
-            setRecipes(data);
-        } catch (error) {
-            console.error("Error fetching recipes:", error);
-        } finally {
-            setLoading(false);
-        }
+            try {
+                const response = await fetch(`${SERVER}/api/recipes/first-five`);
+                const data = await response.json();
+                setRecipes(data);
+            } catch (error) {
+                console.error("Error fetching recipes:", error);
+            } finally {
+                setLoading(false);
+            }
         };
 
         fetchRecipes();
