@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SERVER } from '../constants/const';
 import './Recipes.css';
 
 // INITIAL API END POINT SETUP. REFACTOR LATER 
@@ -10,7 +11,7 @@ export default function Recipes() {
     useEffect(() => {
         const fetchRecipes = async () => {
         try {
-            const response = await fetch("http://localhost:8000/api/recipes/first-five");
+            const response = await fetch(`${SERVER}/api/recipes/first-five`);
             const data = await response.json();
             setRecipes(data);
         } catch (error) {
@@ -41,7 +42,7 @@ export default function Recipes() {
                     
                     <div className="image-container">
                     <img 
-                        src={`/images/${recipe.image_name}.jpg`} 
+                        src={`${SERVER}/images/${recipe.image_name}.jpg`} 
                         alt={recipe.title} 
                         style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
                     />
