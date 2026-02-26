@@ -1,28 +1,42 @@
 import { useState, useEffect } from 'react';
 import { SERVER } from '../constants/const';
+import { useContext } from 'react';
+import { RecipeContext } from '../context/RecipeContext';
 import './Recipes.css';
 
 // INITIAL API END POINT SETUP. REFACTOR LATER 
-
+// Connects to Profile page when User inputs their ingredients
+// TO DO: Need to have a place where they can modify ingredient list
 export default function Recipes() {
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(true);
-
+    const { searchParams } = useContext(RecipeContext);
     useEffect(() => {
-        const fetchRecipes = async () => {
-            try {
-                const response = await fetch(`${SERVER}/api/recipes/first-five`);
-                const data = await response.json();
-                setRecipes(data);
-            } catch (error) {
-                console.error("Error fetching recipes:", error);
-            } finally {
-                setLoading(false);
+    const fetchRecipes = async () => {
+        try {
+            let response;
+
+            if (searchParams) {
+                response = await fetch(`${SERVER}/api/recommend`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(searchParams)
+                });
+            } else {
+                response = await fetch(`${SERVER}/api/recipes/first-five`);
             }
-        };
+
+            const data = await response.json();
+            setRecipes(data);
+        } catch (error) {
+            console.error("Error fetching recipes:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
         fetchRecipes();
-    }, []); 
+    }, [searchParams]); 
 
     if (loading) return <p>Loading recipes...</p>;
 

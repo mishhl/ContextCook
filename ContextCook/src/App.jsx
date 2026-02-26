@@ -5,6 +5,7 @@ import Profile from './pages/Profile'
 import Recipes  from './pages/Recipes'
 import Recommendations from './pages/Recommendations'
 import MainLayout from './layouts/MainLayout'
+import { RecipeProvider } from './context/RecipeContext'
 
 const router = createBrowserRouter([
   {
@@ -32,5 +33,9 @@ const router = createBrowserRouter([
 ]);
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <RecipeProvider>
+      <RouterProvider router={router} />
+    </RecipeProvider>
+  );
 }
