@@ -42,7 +42,7 @@ export default function Recipes() {
 
     return (
         <div className="recipe-grid">
-            {recipes.map((recipe) => (
+            {Array.isArray(recipes) && recipes.map((recipe) => (
                 <div key={recipe.id} className="card">
                     <div className="text-container">
                     <h2 className="title">{recipe.title}</h2>
