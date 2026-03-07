@@ -39,70 +39,195 @@ const handleGenerate = () => {
                 Welcome, Jane Doe
             </p>
 
-            <div style={{justifySelf: "center", width: "25%", backgroundColor: "#F5F5F5", padding: "20px"}}>
+            <div
+            style={{
+                justifySelf: "center",
+                width: "420px",
+                backgroundColor: "#f5f5f5",
+                padding: "24px",
+                borderRadius: "12px"
+            }}
+            >
+            {/* Ingredients Section */}
+            <div
+            style={{
+                background: "#f3f4f6",
+                borderRadius: "10px",
+                padding: "16px",
+                marginBottom: "20px"
+            }}
+            >
+            <p
+                style={{
+                fontSize: "14px",
+                marginBottom: "6px",
+                color: "#374151",
+                fontWeight: "500"
+                }}
+            >
+                Ingredients
+            </p>
 
-                {/* Ingredients */}
-                <p style={{fontSize: "12px"}}>Ingredients</p>
-                <input
-                    type="text"
-                    placeholder="chicken, garlic..."
-                    value={ingredientInput}
-                    onChange={(e) => setIngredientInput(e.target.value)}
-                    style={{width: "100%", marginBottom: "15px"}}
-                />
+            <textarea
+            placeholder="Enter your ingredients..."
+            value={ingredientInput}
+            onChange={(e) => setIngredientInput(e.target.value)}
+            style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "6px",
+                border: "none",
+                background: "#e5e7eb",
+                fontSize: "12px",
+                minHeight: "2px",
+                resize: "vertical",
+                boxSizing: "border-box"
+            }}
+            />
+            </div>
 
-                {/* Kitchen Equipment */}
-                <p style={{fontSize: "12px"}}>Kitchen Equipment</p>
-                <input
-                    type="text"
-                    placeholder="Oven, Blender..."
-                    value={kitchenEquipment}
-                    onChange={(e) => setKitchenEquipment(e.target.value)}
-                    style={{width: "100%", marginBottom: "15px"}}
-                />
+            {/* Kitchen Equipment */}
+            <div
+            style={{
+                background: "#f3f4f6",
+                borderRadius: "10px",
+                padding: "16px",
+                marginBottom: "20px"
+            }}
+            >
+            <p style={{ fontSize: "14px", marginBottom: "8px", color: "#374151", fontWeight: "500" }}>
+                Kitchen Equipment
+            </p>
 
-                {/* Dietary Restrictions */}
-                <p style={{fontSize: "12px"}}>Dietary Restrictions</p>
-                <select
-                    value={dietary}
-                    onChange={(e) => setDietary(e.target.value)}
-                    style={{width: "100%", marginBottom: "15px"}}
-                >
-                    <option value="">None</option>
-                    <option value="Vegetarian">Vegetarian</option>
-                    <option value="Vegan">Vegan</option>
-                    <option value="Gluten-Free">Gluten-Free</option>
-                </select>
+            <textarea
+            placeholder="Oven, Blender..."
+            value={kitchenEquipment}
+            onChange={(e) => setKitchenEquipment(e.target.value)}
+            style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "6px",
+                border: "none",
+                background: "#e5e7eb",
+                fontSize: "12px",
+                minHeight: "5px",
+                resize: "vertical",
+                boxSizing: "border-box"
+            }}
+            />
+            </div>
 
-                {/* Calendar = Meal Time */}
-                <p style={{fontSize: "12px"}}>Meal Time</p>
-                <select
-                    value={mealTime}
-                    onChange={(e) => setMealTime(e.target.value)}
-                    style={{width: "100%", marginBottom: "15px"}}
-                >
-                    <option value="">Any</option>
-                    <option value="Breakfast">Breakfast</option>
-                    <option value="Lunch">Lunch</option>
-                    <option value="Dinner">Dinner</option>
-                </select>
+            {/* Dietary Restrictions */}
+            <div
+            style={{
+                background: "#f3f4f6",
+                borderRadius: "10px",
+                padding: "16px",
+                marginBottom: "20px"
+            }}
+            >
+            <p style={{ fontSize: "14px", marginBottom: "8px", color: "#374151", fontWeight: "500" }}>
+                Dietary Restrictions
+            </p>
 
-                {/* Nutrition Goal */}
-                <p style={{fontSize: "12px"}}>Nutrition Goal</p>
-                <select
-                    value={nutritionGoal}
-                    onChange={(e) => setNutritionGoal(e.target.value)}
-                    style={{width: "100%", marginBottom: "15px"}}
-                >
-                    <option value="">None</option>
-                    <option value="High Protein">High Protein</option>
-                    <option value="Low Carb">Low Carb</option>
-                    <option value="Low Sugar">Low Sugar</option>
-                </select>
+            <select
+                value={dietary}
+                onChange={(e) => setDietary(e.target.value)}
+                style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "6px",
+                border: "none",
+                background: "#e5e7eb",
+                fontSize: "12px"
+                }}
+            >
+                <option value="">None</option>
+                <option value="Vegetarian">Vegetarian</option>
+                <option value="Vegan">Vegan</option>
+                <option value="Gluten-Free">Gluten-Free</option>
+            </select>
+            </div>
 
-                <button onClick={handleGenerate} style={{width: "100%", padding: "10px"}}>
-                    Generate Recipes
-                </button>
+
+            {/* Meal Time */}
+            <div
+            style={{
+                background: "#f3f4f6",
+                borderRadius: "10px",
+                padding: "16px",
+                marginBottom: "20px"
+            }}
+            >
+            <p style={{ fontSize: "14px", marginBottom: "8px", color: "#374151", fontWeight: "500" }}>
+                Meal Time
+            </p>
+
+            <select
+                value={mealTime}
+                onChange={(e) => setMealTime(e.target.value)}
+                style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "6px",
+                border: "none",
+                background: "#e5e7eb",
+                fontSize: "12px"
+                }}
+            >
+                <option value="">Any</option>
+                <option value="Breakfast">Breakfast</option>
+                <option value="Lunch">Lunch</option>
+                <option value="Dinner">Dinner</option>
+            </select>
+            </div>
+
+            {/* Nutrition Goal */}
+            <div style={{
+                background: "#f3f4f6",
+                borderRadius: "10px",
+                padding: "16px",
+                marginBottom: "20px"
+            }}
+            >
+            <p style={{ fontSize: "14px", marginBottom: "8px", color: "#374151", fontWeight: "500" }}>
+                Nutrition Goal
+            </p>
+
+            <select
+                value={nutritionGoal}
+                onChange={(e) => setNutritionGoal(e.target.value)}
+                style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "6px",
+                border: "none",
+                background: "#e5e7eb",
+                fontSize: "12px"
+                }}
+            >
+                <option value="">None</option>
+                <option value="High Protein">High Protein</option>
+                <option value="Low Carb">Low Carb</option>
+                <option value="Low Sugar">Low Sugar</option>
+            </select>
+            </div>
+
+            <button
+            onClick={handleGenerate}
+            style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "8px",
+                border: "none",
+                background: "#3b82f6",
+                color: "white",
+                fontWeight: "600",
+                cursor: "pointer"
+            }}
+            >
+            Generate Recipes
+            </button>
             </div>
         </>
     );
