@@ -33,7 +33,7 @@ export default function Home() {
                     alignContent: "center"
                 }}>
                 <p style={{fontSize: "36px", fontWeight: "bold", color: "#1E1E1E"}}>Context Cook</p>
-                <p style={{fontSize: "16px", color: "#757575"}}>Subtitle</p>
+                <p style={{fontSize: "16px", color: "#757575"}}>Personal Recipes</p>
                 <div style={{width: "124px", display: "flex", justifyContent: "space-between", marginTop: "18px"}}>
                     <button className="homeButton" style={{background: "#E3E3E3", borderColor: "#767676"}}>
                         <Link style={{fontSize: "8px", color: "#1E1E1E"}} to="/profile">Profile</Link>

@@ -19,10 +19,8 @@ const navigate = useNavigate();
 const handleGenerate = () => {
 
     const ingredientArray = ingredientInput
-        .split(",")
-        .map(i => i.trim().toLowerCase())
-        .filter(i => i.length > 0);
-
+    ? ingredientInput.split(",").map(i => i.trim().toLowerCase()).filter(i => i.length > 0)
+    : [];
     setSearchParams({
         ingredients: ingredientArray,
         dietary,

@@ -27,7 +27,12 @@ export default function Recipes() {
             }
 
             const data = await response.json();
-            setRecipes(data);
+            if (Array.isArray(data)) {
+                setRecipes(data);
+            } else {
+                console.error(data.error);
+                setRecipes([]);
+            }
         } catch (error) {
             console.error("Error fetching recipes:", error);
         } finally {
@@ -43,7 +48,7 @@ export default function Recipes() {
     return (
         <div className="recipe-grid">
             {Array.isArray(recipes) && recipes.map((recipe) => (
-                <div key={recipe.id} className="card">
+                <div key={recipe.rowid || recipe.id} className="card">
                     <div className="text-container">
                     <h2 className="title">{recipe.title}</h2>
                     
