@@ -272,7 +272,6 @@ def recommend(req: RecommendRequest):
                 WHEN LOWER(r.dietary_restrictions) LIKE ? THEN 1
                 ELSE 0
             END as dietary_score,
-            END as meal_score,
 
             CASE
                 WHEN LOWER(r.nutrition_goal) LIKE ? THEN 1
