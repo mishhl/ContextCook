@@ -13,8 +13,8 @@ class RecommendRequest(BaseModel):
     """Ranking variables to keep track of user's inputs"""
     ingredients: List[str] = Field(default_factory=list)
     dietary: Optional[str] = None
-    meal_time: Optional[str] = None
     nutrition_goal: Optional[str] = None
+
 app = FastAPI()
 
 app.add_middleware(
@@ -207,10 +207,6 @@ def recommend(req: RecommendRequest):
                 query += " AND LOWER(dietary_restrictions) LIKE ?"
                 params.append(f"%{req.dietary.lower()}%")
 
-            if req.meal_time and req.meal_time.strip():
-                query += " AND LOWER(meal_time) LIKE ?"
-                params.append(f"%{req.meal_time.lower()}%")
-
             if req.nutrition_goal and req.nutrition_goal.strip():
                 query += " AND LOWER(nutrition_goal) LIKE ?"
                 params.append(f"%{req.nutrition_goal.lower()}%")
@@ -254,10 +250,7 @@ def recommend(req: RecommendRequest):
         # 2. Dietary score:
         # - Adds +1 if the recipe's dietary_restrictions matches the user's dietary preference.
         
-        # 3. Meal time score:
-        # - Adds +1 if the recipe matches the selected meal_time (Breakfast/Lunch/Dinner).
-        
-        # 4. Nutrition score:
+        # 3. Nutrition score:
         # - Adds +1 if the recipe matches the selected nutrition_goal (High Protein, Low Carb, etc.).
         
         # Total score = ingredient_score + dietary_score + meal_score + nutrition_score
@@ -274,10 +267,6 @@ def recommend(req: RecommendRequest):
                 WHEN LOWER(r.dietary_restrictions) LIKE ? THEN 1
                 ELSE 0
             END as dietary_score,
-
-            CASE
-                WHEN LOWER(r.meal_time) LIKE ? THEN 1
-                ELSE 0
             END as meal_score,
 
             CASE
@@ -289,8 +278,6 @@ def recommend(req: RecommendRequest):
             COUNT(ri.ingredient_id)
             +
             CASE WHEN LOWER(r.dietary_restrictions) LIKE ? THEN 1 ELSE 0 END
-            +
-            CASE WHEN LOWER(r.meal_time) LIKE ? THEN 1 ELSE 0 END
             +
             CASE WHEN LOWER(r.nutrition_goal) LIKE ? THEN 1 ELSE 0 END
             ) as total_score

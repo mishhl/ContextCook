@@ -11,7 +11,6 @@ export default function Profile() {
     const [ingredientInput, setIngredientInput] = useState("");
     const [kitchenEquipment, setKitchenEquipment] = useState("");
     const [dietary, setDietary] = useState("");
-    const [mealTime, setMealTime] = useState("");
     const [nutritionGoal, setNutritionGoal] = useState("");
     const [cookingSkill, setCookingSkill] = useState("");
     const [cuisinePreference, setCuisinePreference] = useState("");
@@ -64,7 +63,6 @@ export default function Profile() {
         setSearchParams({
             ingredients: ingredientArray,
             dietary,
-            meal_time: mealTime,
             nutrition_goal: nutritionGoal
         });
 
@@ -93,6 +91,7 @@ export default function Profile() {
 
             const result = await response.json();
             console.log(result);
+            alert("User profile saved");
         } catch (error) {
             console.error("Error saving profile:", error);
         }
@@ -212,39 +211,6 @@ export default function Profile() {
                         <option value="Vegan">Vegan</option>
                         <option value="Gluten-Free">Gluten-Free</option>
                         <option value="Dairy-Free">Diary-Free</option>
-                    </select>
-                </div>
-
-
-                {/* Meal Time */}
-                <div
-                    style={{
-                        background: "#f3f4f6",
-                        borderRadius: "10px",
-                        padding: "16px",
-                        marginBottom: "20px"
-                    }}
-                >
-                    <p style={{ fontSize: "14px", marginBottom: "8px", color: "#374151", fontWeight: "500" }}>
-                        Meal Time
-                    </p>
-
-                    <select
-                        value={mealTime}
-                        onChange={(e) => setMealTime(e.target.value)}
-                        style={{
-                        width: "100%",
-                        padding: "12px",
-                        borderRadius: "6px",
-                        border: "none",
-                        background: "#e5e7eb",
-                        fontSize: "12px"
-                        }}
-                    >
-                        <option value="">Any</option>
-                        <option value="Breakfast">Breakfast</option>
-                        <option value="Lunch">Lunch</option>
-                        <option value="Dinner">Dinner</option>
                     </select>
                 </div>
 
