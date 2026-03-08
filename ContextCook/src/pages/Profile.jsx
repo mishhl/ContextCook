@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useContext } from "react";
+import { useState, useEffect, useContext } from "react";
+import { SERVER } from '../constants/const';
 import { useNavigate } from "react-router-dom";
 import { RecipeContext } from "../context/RecipeContext";
 import AvailabilityTracker from "../components/UserSchedule";
@@ -19,6 +19,20 @@ export default function Profile() {
 
     const { setSearchParams } = useContext(RecipeContext);
     const navigate = useNavigate();
+
+    const [filterOptions, setFilterOptions] = useState({
+        cuisine: [],
+        nutrition_goal: [],
+    });
+
+    useEffect(() => {
+        const fetchOptions = async () => {
+            const response = await fetch(`${SERVER}/api/database-columns`);
+            const data = await response.json();
+            setFilterOptions(data);
+        };
+        fetchOptions();
+    }, []);
 
     // TODO: SAVE THE EVENTS TO PERSONAL MODEL OR SOMETHING. ALSO, LOAD IN THE PERSONAL MODEL DATA
     // CAN DELETE TEST AFTER FEATURE IS IMPLEMENTED
@@ -215,10 +229,10 @@ export default function Profile() {
                         fontSize: "12px"
                         }}
                     >
-                        <option value="">None</option>
-                        <option value="High Protein">High Protein</option>
-                        <option value="Low Carb">Low Carb</option>
-                        <option value="Low Sugar">Low Sugar</option>
+                        <option value="">All Nutrition Goals</option>
+                        {filterOptions.nutrition_goal.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                        ))}
                     </select>
                 </div>
 
@@ -265,8 +279,7 @@ export default function Profile() {
                         Cuisine Preference
                     </p>
 
-                    <textarea
-                        placeholder="Chinese, Japanese, Indian..."
+                    <select
                         value={cuisinePreference}
                         onChange={(e) => setCuisinePreference(e.target.value)}
                         style={{
@@ -275,12 +288,14 @@ export default function Profile() {
                             borderRadius: "6px",
                             border: "none",
                             background: "#e5e7eb",
-                            fontSize: "12px",
-                            minHeight: "5px",
-                            resize: "vertical",
-                            boxSizing: "border-box"
+                            fontSize: "12px"
                         }}
-                    />
+                    >
+                        <option value="">All Cuisines</option>
+                        {filterOptions.cuisine.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                    </select>
                 </div>
 
                 {/* User Schedule */}

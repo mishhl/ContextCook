@@ -1,0 +1,15 @@
+.filterDropdownStyle { 
+    padding: 10px; 
+    border-radius: 8px; 
+    border: 1px solid #ddd; 
+    flex: 1; 
+}
+
+.paginationButtonStyle { 
+    padding: 8px 16px; 
+    border-radius: 6px; 
+    border: none; 
+    background: #2C2C2C; 
+    color: white; 
+    cursor: pointer; 
+};

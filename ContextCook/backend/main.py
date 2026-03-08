@@ -29,19 +29,106 @@ if os.path.exists("./static/images"):
 else:
     print("Warning: Static images folder not found at ./static/images")
 
-def fetch_five_recipes():
-    with sqlite3.connect('./database/contextcook.db') as conn:
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM recipes LIMIT 5")
-        rows = cursor.fetchall()      
-        return [dict(row) for row in rows]
+def get_db_connection():
+    conn = sqlite3.connect('./database/contextcook.db')
+    conn.row_factory = sqlite3.Row  
+    return conn
+
+@app.get("/api/database-columns")
+async def get_filter_options():
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
-@app.get("/api/recipes/first-five")
-async def get_first_five():
-    """Returns the first 5 recipes from the database for testing."""
-    recipes = fetch_five_recipes()
+    # We want unique, non-null values for each category
+    columns = ["cuisine", "nutrition_goal"]
+    options = {}
+
+    for col in columns:
+        cursor.execute(f"SELECT DISTINCT {col} FROM recipes WHERE {col} IS NOT NULL AND {col} != ''")
+        options[col] = sorted([row[0] for row in cursor.fetchall()])
+
+    conn.close()
+    return options
+
+@app.get("/api/recipes/first-ten")
+async def get_first_ten():
+    """Returns the first 10 recipes from the database"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM recipes LIMIT 10")
+
+    rows = cursor.fetchall()  
+
+    recipes = [dict(row) for row in rows]
+
     return recipes
+
+@app.get("/api/recipes")
+async def get_recipes(
+    page: int = 0, 
+    limit: Optional[int] = 10,
+    search: Optional[str] = "", 
+    cuisine: Optional[str] = "", 
+    skill: Optional[str] = "",
+    nutrition: Optional[str] = "",    
+    weather: Optional[str] = "",      
+    dietary: Optional[str] = ""   
+):
+    try:
+        offset = page * limit
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        filter_params = []
+
+        query = "SELECT * FROM recipes WHERE 1=1"
+        
+        if search and search != "":
+            query += " AND title LIKE ?"
+            filter_params.append(f"%{search}%")
+
+        if cuisine and cuisine != "":
+            query += " AND cuisine LIKE ?"
+            filter_params.append(f"%{cuisine}%")
+            
+        if skill and skill != "":
+            query += " AND cooking_skill LIKE ?"
+            filter_params.append(f"%{skill}%")
+
+        if nutrition and nutrition != "":
+            query += " AND nutrition_goal LIKE ?"
+            filter_params.append(f"%{nutrition}%")
+
+        if weather and weather != "":
+            query += " AND weather_suitability LIKE ?"
+            filter_params.append(f"%{weather}%")
+
+        if dietary and dietary != "":
+            query += " AND dietary_restrictions LIKE ?"
+            filter_params.append(f"%{dietary}%")
+
+        # kind of inefficient doing another API call, but I couldn't think of another way to get the total count 
+        count_query = query.replace("SELECT *", "SELECT COUNT(*)", 1)
+        total_count = cursor.execute(count_query, filter_params).fetchone()[0]
+
+        query += " LIMIT ? OFFSET ?"
+        final_params = filter_params + [limit, offset]
+
+        rows = cursor.execute(query, final_params).fetchall()
+        conn.close()
+
+        recipes = [dict(row) for row in rows]
+        
+        return {
+            "recipes": recipes,
+            "total": total_count,
+            "page": page,
+            "limit": limit
+        }
+    except Exception as e:
+        print(f"PYTHON ERROR: {e}")
+        return {"error": str(e), "recipes": [], "total": 0}
+
 
 @app.post("/api/recommend")
 def recommend(req: RecommendRequest):

@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { SERVER } from '../constants/const';
-import { useContext } from 'react';
 import { RecipeContext } from '../context/RecipeContext';
 import './Recommendations.css';
 
@@ -23,7 +22,7 @@ export default function Recommendations() {
                     body: JSON.stringify(searchParams)
                 });
             } else {
-                response = await fetch(`${SERVER}/api/recipes/first-five`);
+                response = await fetch(`${SERVER}/api/recipes/first-ten`);
             }
 
             const data = await response.json();
