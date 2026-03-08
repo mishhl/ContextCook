@@ -13,6 +13,8 @@ export default function Profile() {
     const [dietary, setDietary] = useState("");
     const [mealTime, setMealTime] = useState("");
     const [nutritionGoal, setNutritionGoal] = useState("");
+    const [cookingSkill, setCookingSkill] = useState("");
+    const [cuisinePreference, setCuisinePreference] = useState("");
     const [isUserSchedulePopUpOpen, setIsUserSchedulePopUpOpen] = useState(false);
 
     const { setSearchParams } = useContext(RecipeContext);
@@ -220,6 +222,67 @@ export default function Profile() {
                     </select>
                 </div>
 
+                {/* Cooking Skill */}
+                <div style={{
+                    background: "#f3f4f6",
+                    borderRadius: "10px",
+                    padding: "16px",
+                    marginBottom: "20px"
+                }}
+                >
+                    <p style={{ fontSize: "14px", marginBottom: "8px", color: "#374151", fontWeight: "500" }}>
+                        Cooking Skill
+                    </p>
+
+                    <select
+                        value={cookingSkill}
+                        onChange={(e) => setCookingSkill(e.target.value)}
+                        style={{
+                        width: "100%",
+                        padding: "12px",
+                        borderRadius: "6px",
+                        border: "none",
+                        background: "#e5e7eb",
+                        fontSize: "12px"
+                        }}
+                    >
+                        <option value="">Any</option>
+                        <option value="Beginnner">Beginnner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                    </select>
+                </div>
+
+                {/* Cusine Preference */}
+                <div style={{
+                    background: "#f3f4f6",
+                    borderRadius: "10px",
+                    padding: "16px",
+                    marginBottom: "20px"
+                }}
+                >
+                    <p style={{ fontSize: "14px", marginBottom: "8px", color: "#374151", fontWeight: "500" }}>
+                        Cuisine Preference
+                    </p>
+
+                    <textarea
+                        placeholder="Chinese, Japanese, Indian..."
+                        value={cuisinePreference}
+                        onChange={(e) => setCuisinePreference(e.target.value)}
+                        style={{
+                            width: "100%",
+                            padding: "12px",
+                            borderRadius: "6px",
+                            border: "none",
+                            background: "#e5e7eb",
+                            fontSize: "12px",
+                            minHeight: "5px",
+                            resize: "vertical",
+                            boxSizing: "border-box"
+                        }}
+                    />
+                </div>
+
                 {/* User Schedule */}
                 <div style={{
                     borderRadius: "10px",
@@ -268,7 +331,7 @@ export default function Profile() {
                         cursor: "pointer"
                     }}
                 >
-                Generate Recipes
+                    Generate Recipes
                 </button>
 
             </div>
