@@ -10,3 +10,14 @@ CREATE TABLE IF NOT EXISTS recipe_ingredients (
   FOREIGN KEY(recipe_id) REFERENCES recipes(rowid),
   FOREIGN KEY(ingredient_id) REFERENCES ingredients(ingredient_id)
 );
+
+CREATE TABLE IF NOT EXISTS user_profile (
+  id INTEGER PRIMARY KEY DEFAULT 1,
+  ingredients TEXT,
+  kitchen_equipment TEXT,
+  dietary_restriction TEXT,
+  nutritional_goal TEXT,
+  cooking_skill TEXT, 
+  cuisine_preference TEXT,
+  user_schedule TEXT
+)
