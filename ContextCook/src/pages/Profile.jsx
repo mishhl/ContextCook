@@ -39,7 +39,7 @@ export default function Profile() {
             nutrition_goal: nutritionGoal
         });
 
-        navigate("/recipes");
+        navigate("/recommendations");
     };
 
     return (
