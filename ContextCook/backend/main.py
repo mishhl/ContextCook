@@ -134,8 +134,7 @@ async def get_recipes(
 def recommend(req: RecommendRequest):
     """Ranking route for implementing ranking."""
 
-    conn = sqlite3.connect("database/contextcook.db")
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     if not req.ingredients:
