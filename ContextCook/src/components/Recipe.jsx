@@ -68,7 +68,7 @@ const Recipe = ({ isOpen, onClose, recipeId }) => {
                 alt={selectedRecipe.title} 
                 style={{borderRadius: '12px 12px 0 0', position: 'absolute', right: '12px'}} 
               />
-              <div style={badgeStyle}>{selectedRecipe.cuisine}</div>
+              <div className="badgeStyle">{selectedRecipe.cuisine}</div>
             </div>
           </div>
 
@@ -76,7 +76,7 @@ const Recipe = ({ isOpen, onClose, recipeId }) => {
           <div style={{ padding: '16px', fontFamily: "Times New Roman"}}>
             
             {/* Quick Stats Row */}
-            <div style={iconRow}>
+            <div className="iconRow">
               <span>⏱️ {selectedRecipe.time_minutes} min</span>
               <span>👨‍🍳 {selectedRecipe.cooking_skill}</span>
               <span>⛅ {selectedRecipe.weather_suitability}</span>
@@ -86,11 +86,11 @@ const Recipe = ({ isOpen, onClose, recipeId }) => {
 
             {/* Nutritional Macros Bar */}
             <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#666', marginBottom: '8px' }}>NUTRITION (PER SERVING)</p>
-            <div style={macroGrid}>
-              <div style={macroItem}><strong>{selectedRecipe.protein_g}g</strong><br/>Protein</div>
-              <div style={macroItem}><strong>{selectedRecipe.carbs_g}g</strong><br/>Carbs</div>
-              <div style={macroItem}><strong>{selectedRecipe.fat_g}g</strong><br/>Fat</div>
-              <div style={macroItem}><strong>{selectedRecipe.fiber_g}g</strong><br/>Fiber</div>
+            <div className="macroGrid">
+              <div className="macroItem"><strong>{selectedRecipe.protein_g}g</strong><br/>Protein</div>
+              <div className="macroItem"><strong>{selectedRecipe.carbs_g}g</strong><br/>Carbs</div>
+              <div className="macroItem"><strong>{selectedRecipe.fat_g}g</strong><br/>Fat</div>
+              <div className="macroItem"><strong>{selectedRecipe.fiber_g}g</strong><br/>Fiber</div>
             </div>
 
             {/* Requirements Footer */}
@@ -106,36 +106,4 @@ const Recipe = ({ isOpen, onClose, recipeId }) => {
   );
 };
 
-const badgeStyle = {
-  position: 'absolute',
-  top: '12px',
-  right: '12px',
-  backgroundColor: 'rgba(255,255,255,0.9)',
-  padding: '4px 10px',
-  borderRadius: '20px',
-  fontSize: '12px',
-  fontWeight: 'bold'
-};
-
-const iconRow = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  fontSize: '13px',
-  color: '#666'
-};
-
-const macroGrid = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(4, 1fr)',
-  gap: '5px',
-  textAlign: 'center',
-  backgroundColor: '#f9f9f9',
-  padding: '8px',
-  borderRadius: '8px'
-};
-
-const macroItem = {
-  fontSize: '11px',
-  lineHeight: '1.4'
-};
 export default Recipe;
