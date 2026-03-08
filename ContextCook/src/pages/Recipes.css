@@ -2,6 +2,7 @@
     border-radius: 8px; 
     border: 1px solid #ddd; 
     flex: 1; 
+    font-size: 12px;
 }
 
 .paginationButtonStyle { 

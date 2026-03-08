@@ -62,7 +62,7 @@ export default function Recipes() {
                     placeholder="Search recipes..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)} // Reset to page 0 on new search
-                    style={{ flex: 2, padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+                    style={{ flex: 2, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: "12px" }}
                 />
                 <select value={cuisine} onChange={(e) => { setCuisine(e.target.value); setPage(0); }} className="filterDropdownStyle">
                     <option value="">All Cuisines</option>

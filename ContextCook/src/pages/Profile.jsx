@@ -99,7 +99,7 @@ export default function Profile() {
 
     return (
         <>
-            <p style={{fontSize: "36px", fontWeight: "bold", margin: "32px"}}>
+            <p style={{fontSize: "36px", fontWeight: "bold", margin: "16px 0 16px 0", justifySelf: "center"}}>
                 Welcome, Jane Doe
             </p>
 
