@@ -15,6 +15,7 @@ export default function Profile() {
     const [nutritionGoal, setNutritionGoal] = useState("");
     const [cookingSkill, setCookingSkill] = useState("");
     const [cuisinePreference, setCuisinePreference] = useState("");
+    const [userSchedule, setUserSchedule] = useState([]);
     const [isUserSchedulePopUpOpen, setIsUserSchedulePopUpOpen] = useState(false);
 
     const { setSearchParams } = useContext(RecipeContext);
@@ -34,11 +35,25 @@ export default function Profile() {
         fetchOptions();
     }, []);
 
-    // TODO: SAVE THE EVENTS TO PERSONAL MODEL OR SOMETHING. ALSO, LOAD IN THE PERSONAL MODEL DATA
-    // CAN DELETE TEST AFTER FEATURE IS IMPLEMENTED
-    let test = [{id: 1772926662928, start: '03:37', end: '16:39', label: 'test'},{id: 1772926162928, start: '04:17', end: '16:39', label: 'test'}];
+    useEffect(() => {
+        const getUserProfile = async () => {
+            const response = await fetch(`${SERVER}/api/profile`);
+            const data = await response.json();
+            
+            setIngredientInput(data.ingredients || "");
+            setKitchenEquipment(data.kitchen_equipment || "");
+            setDietary(data.dietary_restriction || "");
+            setNutritionGoal(data.nutritional_goal || "");
+            setCookingSkill(data.cooking_skill || "");
+            setCuisinePreference(data.cuisine_preference || "");
+            setUserSchedule(data.user_schedule || "");
+        };
+        getUserProfile();
+    }, []);
+
     const handleSaveSchedule = (activities) => {
         console.log("Processing these events for recipes:", activities);
+        setUserSchedule(activities);
     };
 
     const handleGenerate = () => {
@@ -54,6 +69,33 @@ export default function Profile() {
         });
 
         navigate("/recommendations");
+    };
+
+    const saveProfile = async () => {
+        const profileData = {
+            ingredients: ingredientInput,
+            main_equipment: kitchenEquipment,
+            dietary_restrictions: dietary,
+            nutritional_goal: nutritionGoal,
+            cooking_skill: cookingSkill,
+            cuisine_preference: cuisinePreference,
+            user_schedule: userSchedule 
+        };
+
+        try {
+            const response = await fetch(`${SERVER}/api/profile`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(profileData),
+            });
+
+            const result = await response.json();
+            console.log(result);
+        } catch (error) {
+            console.error("Error saving profile:", error);
+        }
     };
 
     return (
@@ -330,26 +372,43 @@ export default function Profile() {
                         isOpen={isUserSchedulePopUpOpen} 
                         onClose={() => setIsUserSchedulePopUpOpen(false)} 
                         onSaveSchedule={handleSaveSchedule}
-                        savedActivities={test}
+                        savedActivities={userSchedule}
                     />
                 </div>
 
-                <button
-                    onClick={handleGenerate}
-                    style={{
-                        width: "100%",
-                        padding: "12px",
-                        borderRadius: "8px",
-                        border: "none",
-                        background: "#2C2C2C",
-                        color: "white",
-                        fontWeight: "600",
-                        cursor: "pointer"
-                    }}
-                >
-                    Generate Recipes
-                </button>
+                <div style={{padding: "16px", display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
+                    <button
+                        onClick={handleGenerate}
+                        style={{
+                            width: "40%",
+                            padding: "12px",
+                            borderRadius: "8px",
+                            border: "none",
+                            background: "#2C2C2C",
+                            color: "white",
+                            fontWeight: "600",
+                            cursor: "pointer"
+                        }}
+                    >
+                        Generate Recipes
+                    </button>
 
+                    <button
+                        onClick={saveProfile}
+                        style={{
+                            width: "40%",
+                            padding: "12px",
+                            borderRadius: "8px",
+                            border: "none",
+                            background: "#2C2C2C",
+                            color: "white",
+                            fontWeight: "600",
+                            cursor: "pointer"
+                        }}
+                    >
+                        Save Profile
+                    </button>
+                </div>
             </div>
         </>
     );

@@ -28,7 +28,6 @@ export default function Recipes() {
     }, []);
 
     useEffect(() => {
-        console.log("Changing state");
         fetchRecipes();
         window.scrollTo({
             top: 0,

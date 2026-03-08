@@ -3,9 +3,6 @@ import { SERVER } from '../constants/const';
 import { RecipeContext } from '../context/RecipeContext';
 import './Recommendations.css';
 
-// INITIAL API END POINT SETUP. REFACTOR LATER 
-// Connects to Profile page when User inputs their ingredients
-// TO DO: Need to have a place where they can modify ingredient list
 export default function Recommendations() {
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(true);
