@@ -12,6 +12,7 @@ export default function Recipes() {
     const [nutrition, setNutrition] = useState("");
     const [weather, setWeather] = useState("");
     const [dietary, setDietary] = useState("");
+    const [mealTime, setMealTime] = useState("");
 
     const [filterOptions, setFilterOptions] = useState({
         cuisine: [],
@@ -33,12 +34,12 @@ export default function Recipes() {
             top: 0,
             behavior: 'smooth' // Optional: makes it a nice sliding motion instead of a jump
         });
-    }, [search, cuisine, skill, nutrition, weather, dietary, page]);
+    }, [search, cuisine, skill, nutrition, weather, dietary, mealTime, page]);
 
     const fetchRecipes = async () => {
         try {
             // Ensure your FastAPI server is running (usually on port 8000)
-            const url = `${SERVER}/api/recipes?page=${page}&search=${search}&cuisine=${cuisine}&skill=${skill}&nutrition=${nutrition}&weather=${weather}&dietary=${dietary}`;
+            const url = `${SERVER}/api/recipes?page=${page}&search=${search}&cuisine=${cuisine}&skill=${skill}&nutrition=${nutrition}&weather=${weather}&dietary=${dietary}&meal_time=${mealTime}`;
             const response = await fetch(url);
             const data = await response.json();
             setRecipes(data.recipes);
@@ -89,6 +90,12 @@ export default function Recipes() {
                     <option value="Vegetarian">Vegetarian</option>
                     <option value="Gluten-Free">Gluten-Free</option>
                     <option value="Dairy-Free">Dairy-Free</option>
+                </select>
+                <select value={mealTime} onChange={(e) => { setMealTime(e.target.value); setPage(0); }} className="filterDropdownStyle">
+                    <option value="">Any Time</option>
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
                 </select>
             </div>
 

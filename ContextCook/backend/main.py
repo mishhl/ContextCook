@@ -74,7 +74,8 @@ async def get_recipes(
     skill: Optional[str] = "",
     nutrition: Optional[str] = "",    
     weather: Optional[str] = "",      
-    dietary: Optional[str] = ""   
+    dietary: Optional[str] = "",
+    meal_time: Optional[str] = ""
 ):
     try:
         offset = page * limit
@@ -108,6 +109,10 @@ async def get_recipes(
         if dietary and dietary != "":
             query += " AND dietary_restrictions LIKE ?"
             filter_params.append(f"%{dietary}%")
+
+        if meal_time and meal_time != "":
+            query += " AND meal_time LIKE ?"
+            filter_params.append(f"%{meal_time}%")
 
         # kind of inefficient doing another API call, but I couldn't think of another way to get the total count 
         count_query = query.replace("SELECT *", "SELECT COUNT(*)", 1)
