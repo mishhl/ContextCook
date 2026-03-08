@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { SERVER } from '../constants/const';
+import Recipe from '../components/Recipe';
 import './Recipes.css';
 
 export default function Recipes() {
@@ -13,6 +14,9 @@ export default function Recipes() {
     const [weather, setWeather] = useState("");
     const [dietary, setDietary] = useState("");
     const [mealTime, setMealTime] = useState("");
+
+    const [recipeId, setRecipeId] = useState(0);
+    const [isRecipePopUpOpen, setIsRecipePopUpOpen] = useState(false);
 
     const [filterOptions, setFilterOptions] = useState({
         cuisine: [],
@@ -102,9 +106,9 @@ export default function Recipes() {
             <p style={{ color: '#666' }}>{(page) * recipes.length + 1}-{(page + 1) * recipes.length} of {total} recipes</p>
 
             <div className="recipe-grid">
-                    {Array.isArray(recipes) && recipes.map((recipe) => (
-                        <div key={recipe.rowid || recipe.id} className="card">
-                            <div className="text-container">
+                {Array.isArray(recipes) && recipes.map((recipe) => (
+                    <div key={recipe.id} className="card" onClick={() => {setIsRecipePopUpOpen(true); setRecipeId(recipe.id); }}>
+                        <div className="text-container">
                             <h2 className="title">{recipe.title}</h2>
                             
                             <div className="bottom-content">
@@ -112,18 +116,24 @@ export default function Recipes() {
                                 
                                 <p className="time">{recipe.time_minutes} min</p>
                             </div>
-                            </div>
+                        </div>
                             
-                            <div className="image-container">
+                        <div className="image-container">
                             <img 
                                 src={`${SERVER}/images/${recipe.image_name}.jpg`} 
                                 alt={recipe.title} 
                                 style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
                             />
-                            </div>
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ))}
+            </div>
+
+            <Recipe 
+                isOpen={isRecipePopUpOpen} 
+                onClose={() => setIsRecipePopUpOpen(false)} 
+                recipeId={recipeId}
+            />
 
             {/* Pagination Buttons */}
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '30px' }}>

@@ -11,4 +11,16 @@
     background: #2C2C2C; 
     color: white; 
     cursor: pointer; 
-};
+}
+
+.card {
+  display: flex;
+  justify-content: space-between;
+  width: 350px;
+  height: 180px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}

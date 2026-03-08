@@ -52,6 +52,22 @@ async def get_filter_options():
     conn.close()
     return options
 
+@app.get("/api/recipe/{recipe_id}")
+async def get_recipe_by_id(recipe_id: int):
+    try:
+        conn = get_db_connection()
+        query = "SELECT * FROM recipes WHERE id = ?"
+        row = conn.execute(query, (recipe_id,)).fetchone()
+        conn.close()
+
+        if row:
+            return dict(row)
+            
+        return {"error": "Recipe not found"}, 404
+    except Exception as e:
+        print(f"ERROR {recipe_id}: {e}")
+        return {"error": str(e)}, 500
+
 @app.get("/api/recipes/first-ten")
 async def get_first_ten():
     """Returns the first 10 recipes from the database"""
