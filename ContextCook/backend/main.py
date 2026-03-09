@@ -14,6 +14,7 @@ class RecommendRequest(BaseModel):
     ingredients: List[str] = Field(default_factory=list)
     dietary: Optional[str] = None
     nutrition_goal: Optional[str] = None
+    meal_time: Optional[str] = None
 
 app = FastAPI()
 
@@ -259,7 +260,7 @@ def recommend(req: RecommendRequest):
 
         ingredient_ids = [row["ingredient_id"] for row in ingredient_rows]
         id_placeholders = ",".join(["?"] * len(ingredient_ids))
-
+        
         
         
         # Scoring system:
@@ -312,101 +313,20 @@ def recommend(req: RecommendRequest):
             LIMIT 10
         """
 
+    
+        dietary = f"%{(req.dietary or '').lower()}%"
+        nutrition = f"%{(req.nutrition_goal or '').lower()}%"
+        params = ingredient_ids + [dietary, nutrition, dietary, nutrition]
+
         ranked_rows = cursor.execute(
             ranking_query,
-            ingredient_ids
+            params
         ).fetchall()
 
         conn.close()
-
-    ingredient_rows = cursor.execute(
-        ingredient_query,
-        [f"%{i.lower()}%" for i in req.ingredients]
-    ).fetchall()
-
-    if not ingredient_rows:
-        conn.close()
-        return [] # Recipe doesn't exist
-
-    ingredient_ids = [row["ingredient_id"] for row in ingredient_rows]
-    id_placeholders = ",".join(["?"] * len(ingredient_ids))
-
-    
-    
-    # Scoring system:
-    
-    # 1. Ingredient score:
-    # - Counts how many of the user's ingredients appear in each recipe.
-    # - Uses COUNT(ri.ingredient_id) from the recipe_ingredients table.
-    
-    # 2. Dietary score:
-    # - Adds +1 if the recipe's dietary_restrictions matches the user's dietary preference.
-    
-    # 3. Meal time score:
-    # - Adds +1 if the recipe matches the selected meal_time (Breakfast/Lunch/Dinner).
-    
-    # 4. Nutrition score:
-    # - Adds +1 if the recipe matches the selected nutrition_goal (High Protein, Low Carb, etc.).
-    
-    # Total score = ingredient_score + dietary_score + meal_score + nutrition_score
-    # Recipes are then sorted by the highest total_score so that the most relevant
-    # recipes appear first in the results.
-    
-
-    ranking_query = f"""
-        SELECT r.*,
-
-        COUNT(ri.ingredient_id) as ingredient_score,
-
-        CASE
-            WHEN LOWER(r.dietary_restrictions) LIKE ? THEN 1
-            ELSE 0
-        END as dietary_score,
-
-        CASE
-            WHEN LOWER(r.meal_time) LIKE ? THEN 1
-            ELSE 0
-        END as meal_score,
-
-        CASE
-            WHEN LOWER(r.nutrition_goal) LIKE ? THEN 1
-            ELSE 0
-        END as nutrition_score,
-
-        (
-        COUNT(ri.ingredient_id)
-        +
-        CASE WHEN LOWER(r.dietary_restrictions) LIKE ? THEN 1 ELSE 0 END
-        +
-        CASE WHEN LOWER(r.meal_time) LIKE ? THEN 1 ELSE 0 END
-        +
-        CASE WHEN LOWER(r.nutrition_goal) LIKE ? THEN 1 ELSE 0 END
-        ) as total_score
-
-        FROM recipes r
-        LEFT JOIN recipe_ingredients ri
-        ON ri.recipe_id = r.rowid
-        AND ri.ingredient_id IN ({id_placeholders})
-
-        GROUP BY r.rowid
-        ORDER BY total_score DESC
-        LIMIT 10
-    """
-    
-    dietary = f"%{(req.dietary or '').lower()}%"
-    meal = f"%{(req.meal_time or '').lower()}%"
-    nutrition = f"%{(req.nutrition_goal or '').lower()}%"
-    params = ingredient_ids + [dietary, meal, nutrition, dietary, meal, nutrition]
-
-    ranked_rows = cursor.execute(
-        ranking_query,
-        params
-    ).fetchall()
-
-    conn.close()
-
-    return [dict(row) for row in ranked_rows]
         return [dict(row) for row in ranked_rows]
+    
+
     except Exception as e:
         print(f"Exception: {e}") 
         return {"error": str(e)}, 500
