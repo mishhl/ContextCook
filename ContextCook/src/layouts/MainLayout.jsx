@@ -15,14 +15,26 @@ export default function MainLayout() {
   return (
     <>
         <nav className="mainNavBar"> 
-            <img src={contextCookLogo} style={{width: "24px", height: "24px", marginLeft: "32px"}}/>
+            <Link to="/">
+                <img 
+                    src={contextCookLogo} 
+                    style={{width: "24px", height: "24px", marginLeft: "32px", cursor: "pointer"}}
+                    alt="ContextCook Logo"
+                />
+            </Link>
             <div style={{display: "flex", justifyContent: "center"}}>
                 <TabBox><Link to="/">Home</Link></TabBox>
                 <TabBox><Link to="/profile">Profile</Link></TabBox>
                 <TabBox><Link to="/recipes">Recipes</Link></TabBox>
                 <TabBox><Link to="/recommendations">Recommendations</Link></TabBox>
             </div>
-            <img src={profilePicture} style={{width: "24px", height: "24px", marginRight: "32px"}}/>
+            <Link to="/profile">
+                <img 
+                    src={profilePicture} 
+                    style={{width: "24px", height: "24px", marginRight: "32px", cursor: "pointer"}}
+                    alt="User Profile"
+                />
+            </Link>
         </nav>
         <main className="mainBody">
             {/* The current page component renders here */}

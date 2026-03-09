@@ -1,0 +1,32 @@
+.badgeStyle {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background-color: rgba(255,255,255,0.9);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.iconRow {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #666;
+}
+
+.macroGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    text-align: center;
+    background-color: #f9f9f9;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.macroItem {
+    font-size: 11px;
+    line-height: 1.4;
+}
