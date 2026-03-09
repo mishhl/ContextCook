@@ -162,10 +162,15 @@ def recommend(req: RecommendRequest):
         ORDER BY total_score DESC
         LIMIT 10
     """
+    
+    dietary = f"%{(req.dietary or '').lower()}%"
+    meal = f"%{(req.meal_time or '').lower()}%"
+    nutrition = f"%{(req.nutrition_goal or '').lower()}%"
+    params = ingredient_ids + [dietary, meal, nutrition, dietary, meal, nutrition]
 
     ranked_rows = cursor.execute(
         ranking_query,
-        ingredient_ids
+        params
     ).fetchall()
 
     conn.close()
