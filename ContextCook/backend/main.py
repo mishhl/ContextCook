@@ -15,6 +15,7 @@ class RecommendRequest(BaseModel):
     dietary: Optional[str] = None
     nutrition_goal: Optional[str] = None
     meal_time: Optional[str] = None
+    limit: Optional[int] = 10
 
 app = FastAPI()
 
@@ -210,7 +211,6 @@ async def save_profile(data: dict):
 @app.post("/api/recommend")
 def recommend(req: RecommendRequest):
     """Ranking route for implementing ranking."""
-
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -233,11 +233,12 @@ def recommend(req: RecommendRequest):
                 query += " AND LOWER(nutrition_goal) LIKE ?"
                 params.append(f"%{req.nutrition_goal.lower()}%")
 
-            query += " LIMIT 10"
+            query += " LIMIT ?"
+            params.append(req.limit)
             rows = cursor.execute(query, params).fetchall()
 
             if not rows:
-                rows = cursor.execute("SELECT * FROM recipes LIMIT 10").fetchall()
+                rows = cursor.execute("SELECT * FROM recipes LIMIT ?", (req.limit,)).fetchall()
             
             conn.close()
             return [dict(row) for row in rows]
@@ -305,24 +306,22 @@ def recommend(req: RecommendRequest):
 
             FROM recipes r
             LEFT JOIN recipe_ingredients ri
-            ON ri.recipe_id = r.rowid
+            ON ri.recipe_id = r.id
             AND ri.ingredient_id IN ({id_placeholders})
 
-            GROUP BY r.rowid
+            GROUP BY r.id
             ORDER BY total_score DESC
-            LIMIT 10
+            LIMIT ?
         """
 
     
         dietary = f"%{(req.dietary or '').lower()}%"
         nutrition = f"%{(req.nutrition_goal or '').lower()}%"
-        params = ingredient_ids + [dietary, nutrition, dietary, nutrition]
-
+        params = [dietary, nutrition, dietary, nutrition] + ingredient_ids + [req.limit]
         ranked_rows = cursor.execute(
             ranking_query,
             params
         ).fetchall()
-
         conn.close()
         return [dict(row) for row in ranked_rows]
     

@@ -8,6 +8,7 @@ import './Recommendations.css';
 export default function Recommendations() {
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [recipeCount, setRecipeCount] = useState(10);
     const { searchParams } = useContext(RecipeContext);
 
     const [recipeId, setRecipeId] = useState(0);
@@ -22,10 +23,13 @@ export default function Recommendations() {
                 response = await fetch(`${SERVER}/api/recommend`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(searchParams)
+                    body: JSON.stringify({
+                        ...searchParams,
+                        limit: recipeCount
+                    })
                 });
             } else {
-                response = await fetch(`${SERVER}/api/recipes/first-ten`);
+                response = await fetch(`${SERVER}/api/recipes?limit=${recipeCount}`);
             }
 
             const data = await response.json();
@@ -43,14 +47,18 @@ export default function Recommendations() {
     };
 
         fetchRecipes();
-    }, [searchParams]); 
+    }, [searchParams, recipeCount]); 
 
     if (loading) return <p>Loading recipes...</p>;
 
     return (
-        <>
-            <div className="recipe-grid">
-                {Array.isArray(recipes) && recipes.map((recipe) => (
+        <>           
+            <div className="recipe-controls" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '30px' }}>
+                <button onClick={() => setRecipeCount(5)}>5 Recipes</button>
+                <button onClick={() => setRecipeCount(10)}>10 Recipes</button>
+            </div>
+            <div className="recipe-grid" key={recipeCount}>
+                {Array.isArray(recipes) && recipes.slice(0, recipeCount).map((recipe) => (
                     <div key={recipe.id} className="card" onClick={() => {setIsRecipePopUpOpen(true); setRecipeId(recipe.id); }}>
                         <div className="text-container">
                         <h2 className="title">{recipe.title}</h2>

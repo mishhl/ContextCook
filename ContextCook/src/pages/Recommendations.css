@@ -21,6 +21,25 @@
   cursor: pointer;
 }
 
+.recipe-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.recipe-controls button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+}
+
+.recipe-controls button:hover {
+  background: #e8e8e8;
+}
+
 .text-container {
   display: flex;
   flex-direction: column;
