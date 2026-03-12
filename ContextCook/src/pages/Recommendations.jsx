@@ -9,57 +9,97 @@ export default function Recommendations() {
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [recipeCount, setRecipeCount] = useState(10);
+    const [userSchedule, setUserSchedule] = useState([]);
+    
     const { searchParams } = useContext(RecipeContext);
 
     const [recipeId, setRecipeId] = useState(0);
     const [isRecipePopUpOpen, setIsRecipePopUpOpen] = useState(false);
 
-    useEffect(() => {
-        const fetchRecipes = async () => {
-            setLoading(true);
-            try {
-                let response;
+    const getMinutesUntilNextEvent = (activities) => {
+        if (!activities || activities.length === 0) return null;
 
-                if (searchParams) {
-                    response = await fetch(`${SERVER}/api/recommend`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            ingredients: searchParams?.ingredients || [],
-                            equipments: searchParams?.equipments || [],
-                            dietary: searchParams?.dietary || "",
-                            nutrition_goal: searchParams?.nutrition_goal || "",
-                            cooking_skill: searchParams?.cooking_skill || "",
-                            cuisine_preference: searchParams?.cuisine_preference || "",
-                            available_minutes: searchParams?.available_minutes || 1440,
-                            meal_time: searchParams?.meal_time || "",
-                            limit: recipeCount
-                        })
-                    });
-                } else {
-                    response = await fetch(`${SERVER}/api/recipes?limit=${recipeCount}`);
-                }
-                
-                const data = await response.json();
-                if (Array.isArray(data)) {
-                    // /api/recommend
-                    setRecipes(data);
-                } else if (Array.isArray(data.recipes)) {
-                    // /api/recipes
-                    setRecipes(data.recipes);
-                } else {
-                    console.error("Unexpected API response:", data);
-                    setRecipes([]);
-                }
-            } catch (error) {
-                console.error("Error fetching recipes:", error);
-            } finally {
-                setLoading(false);
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        const sortedEvents = [...activities].sort((a, b) => a.start.localeCompare(b.start));
+
+        const nextEvent = sortedEvents.find(event => {
+            const [hours, minutes] = event.start.split(':').map(Number);
+            return (hours * 60 + minutes) > currentMinutes;
+        });
+
+        if (!nextEvent) return 1440;
+
+        const [nextHours, nextMinutes] = nextEvent.start.split(':').map(Number);
+        const totalNextMinutes = nextHours * 60 + nextMinutes;
+        
+        return totalNextMinutes - currentMinutes;
+    };
+
+    const fetchRecipes = async (currentSchedule) => {
+        setLoading(true);
+        try {
+            let response;
+
+            if (searchParams) {
+                response = await fetch(`${SERVER}/api/recommend`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        ingredients: searchParams?.ingredients || [],
+                        equipments: searchParams?.equipments || [],
+                        dietary: searchParams?.dietary || "",
+                        nutrition_goal: searchParams?.nutrition_goal || "",
+                        cooking_skill: searchParams?.cooking_skill || "",
+                        cuisine_preference: searchParams?.cuisine_preference || "",
+                        available_minutes: getMinutesUntilNextEvent(currentSchedule) || 1440,
+                        meal_time: searchParams?.meal_time || "",
+                        limit: recipeCount
+                    })
+                });
+            } else {
+                response = await fetch(`${SERVER}/api/recipes?limit=${recipeCount}`);
             }
-        };
+            
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                // /api/recommend
+                setRecipes(data);
+            } else if (Array.isArray(data.recipes)) {
+                // /api/recipes
+                setRecipes(data.recipes);
+            } else {
+                console.error("Unexpected API response:", data);
+                setRecipes([]);
+            }
+        } catch (error) {
+            console.error("Error fetching recipes:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        fetchRecipes();
-    }, [searchParams, recipeCount]); 
+    useEffect(() => {
+        const getUserProfile = async () => {
+            const response = await fetch(`${SERVER}/api/profile`);
+            const data = await response.json();
+            
+            const schedule = data.user_schedule
+            setUserSchedule(schedule);
+            fetchRecipes(schedule);
+        };
+        getUserProfile();
+    }, []);
+
+    useEffect(() => {
+        const liveUpdateInterval = setInterval(() => {
+            console.log("Refreshing live recommendations...");
+            fetchRecipes(userSchedule);
+        }, 60000);
+
+        return () => clearInterval(liveUpdateInterval);
+    }, [searchParams, recipeCount, userSchedule]); 
 
     if (loading) return <p>Loading recipes...</p>;
 
