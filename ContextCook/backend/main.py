@@ -14,6 +14,9 @@ class RecommendRequest(BaseModel):
     ingredients: List[str] = Field(default_factory=list)
     dietary: Optional[str] = None
     nutrition_goal: Optional[str] = None
+    cooking_skill: Optional[str] = None
+    cuisine_preference: Optional[str] = None
+    available_minutes: Optional[int] = None
     meal_time: Optional[str] = None
     limit: Optional[int] = 10
 
@@ -245,9 +248,9 @@ def recommend(req: RecommendRequest):
         
         # Step 1: Convert ingredient names → ingredient_ids
         ingredient_query = f"""
-            SELECT ingredient_id
-            FROM ingredients
-            WHERE {" OR ".join(["LOWER(name) LIKE ?"] * len(req.ingredients))}
+        SELECT ingredient_id
+        FROM ingredients
+        WHERE {" OR ".join(["LOWER(name) LIKE ?"] * len(req.ingredients))}
         """
 
         ingredient_rows = cursor.execute(
@@ -259,10 +262,15 @@ def recommend(req: RecommendRequest):
             conn.close()
             return [] # Recipe doesn't exist
 
+        
         ingredient_ids = [row["ingredient_id"] for row in ingredient_rows]
         id_placeholders = ",".join(["?"] * len(ingredient_ids))
+
+        # Number of ingredients the user entered.
+        # This value is used when calculating the ingredient match percentage.
+        # It represents the total ingredients the user wants to match against recipes.
         
-        
+        ingredient_count = max(len(req.ingredients), 1)
         
         # Scoring system:
         
@@ -279,45 +287,85 @@ def recommend(req: RecommendRequest):
         # Total score = ingredient_score + dietary_score + meal_score + nutrition_score
         # Recipes are then sorted by the highest total_score so that the most relevant
         # recipes appear first in the results.
+        # match % =
+        # (# matching ingredients) / (# recipe ingredients)
+
         
+        ranking_query = f""" 
+        SELECT r.*,
+        -- Ingredient Match %: Calculated by Jaccard Similarity Style Formula
+        -- Formula (Prevents recipes with many ingredients always scoring 100%): Intersection / Union * 100 
+        -- Intersection = number of matching ingredients between the user and recipe
+        -- Union = total unique ingredients between both sets
 
-        ranking_query = f"""
-            SELECT r.*,
 
-            COUNT(ri.ingredient_id) as ingredient_score,
+        COUNT(DISTINCT ri.ingredient_id) as ingredient_score,
 
-            CASE
-                WHEN LOWER(r.dietary_restrictions) LIKE ? THEN 1
-                ELSE 0
-            END as dietary_score,
+        (
+        COUNT(DISTINCT ri.ingredient_id) * 100.0 /
+        COUNT(DISTINCT ria.ingredient_id)
+        ) as ingredient_match_percent,
 
-            CASE
-                WHEN LOWER(r.nutrition_goal) LIKE ? THEN 1
-                ELSE 0
-            END as nutrition_score,
+        CASE
+            WHEN LOWER(r.dietary_restrictions) LIKE ? THEN 1
+            ELSE 0
+        END as dietary_score,
 
-            (
-            COUNT(ri.ingredient_id)
-            +
-            CASE WHEN LOWER(r.dietary_restrictions) LIKE ? THEN 1 ELSE 0 END
-            +
-            CASE WHEN LOWER(r.nutrition_goal) LIKE ? THEN 1 ELSE 0 END
-            ) as total_score
+        CASE
+            WHEN LOWER(r.nutrition_goal) LIKE ? THEN 1
+            ELSE 0
+        END as nutrition_score,
 
-            FROM recipes r
-            LEFT JOIN recipe_ingredients ri
-            ON ri.recipe_id = r.id
-            AND ri.ingredient_id IN ({id_placeholders})
+        CASE
+            WHEN LOWER(r.cooking_skill) LIKE ? THEN 1
+            ELSE 0
+        END as skill_score,
 
-            GROUP BY r.id
-            ORDER BY total_score DESC
-            LIMIT ?
+        CASE
+            WHEN LOWER(r.cuisine) LIKE ? THEN 1
+            ELSE 0
+        END as cuisine_score,
+
+        CASE
+            WHEN r.time_minutes <= ? THEN 1
+            ELSE 0
+        END as schedule_score,
+
+        (
+        COUNT(ri.ingredient_id)
+        + CASE WHEN LOWER(r.dietary_restrictions) LIKE ? THEN 1 ELSE 0 END
+        + CASE WHEN LOWER(r.nutrition_goal) LIKE ? THEN 1 ELSE 0 END
+        + CASE WHEN LOWER(r.cooking_skill) LIKE ? THEN 1 ELSE 0 END
+        + CASE WHEN LOWER(r.cuisine) LIKE ? THEN 1 ELSE 0 END
+        + CASE WHEN r.time_minutes <= ? THEN 1 ELSE 0 END
+        ) as total_score
+
+        FROM recipes r
+        LEFT JOIN recipe_ingredients ri
+        ON ri.recipe_id = r.id
+        AND ri.ingredient_id IN ({id_placeholders})
+
+        LEFT JOIN recipe_ingredients ria
+        ON ria.recipe_id = r.id
+
+        GROUP BY r.id
+        HAVING ingredient_score > 0
+        ORDER BY total_score DESC
+        LIMIT ?
         """
 
     
         dietary = f"%{(req.dietary or '').lower()}%"
         nutrition = f"%{(req.nutrition_goal or '').lower()}%"
-        params = [dietary, nutrition, dietary, nutrition] + ingredient_ids + [req.limit]
+        skill = f"%{(req.cooking_skill or '').lower()}%"
+        cuisine = f"%{(req.cuisine_preference or '').lower()}%"
+        schedule_time = req.available_minutes or 60
+        
+        params = (
+            [dietary, nutrition, skill, cuisine, schedule_time]
+            + ingredient_ids
+            + [dietary, nutrition, skill, cuisine, schedule_time, req.limit]
+        )       
         ranked_rows = cursor.execute(
             ranking_query,
             params

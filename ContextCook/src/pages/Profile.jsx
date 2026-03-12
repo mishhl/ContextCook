@@ -63,7 +63,10 @@ export default function Profile() {
         setSearchParams({
             ingredients: ingredientArray,
             dietary,
-            nutrition_goal: nutritionGoal
+            nutrition_goal: nutritionGoal,
+            cooking_skill: cookingSkill,
+            cuisine_preference: cuisinePreference,
+            available_minutes: userSchedule?.availableMinutes || 60
         });
 
         navigate("/recommendations");

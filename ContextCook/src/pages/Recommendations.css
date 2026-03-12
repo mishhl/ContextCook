@@ -10,6 +10,7 @@
 
 .card {
   display: flex;
+  position: relative;
   justify-content: space-between;
   width: 350px;
   height: 180px;
@@ -38,6 +39,30 @@
 
 .recipe-controls button:hover {
   background: #e8e8e8;
+}
+.match-score {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+
+  background: #3fa34d;
+  color: white;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.recommendation-reasons {
+  font-size: 12px;
+  color: #4CAF50;
+  margin-top: 4px;
+}
+
+.recommendation-reasons p {
+  margin: 2px 0;
 }
 
 .text-container {
