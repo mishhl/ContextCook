@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 class RecommendRequest(BaseModel):
     """Ranking variables to keep track of user's inputs"""
     ingredients: List[str] = Field(default_factory=list)
+    equipments: List[str] = Field(default_factory=list)
     dietary: Optional[str] = None
     nutrition_goal: Optional[str] = None
     cooking_skill: Optional[str] = None
@@ -210,170 +211,96 @@ async def save_profile(data: dict):
         print(f"Exception: {e}") 
         return {"error": str(e)}, 500
 
-
 @app.post("/api/recommend")
 def recommend(req: RecommendRequest):
-    """Ranking route for implementing ranking."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        if not req.ingredients:
-            query = "SELECT * FROM recipes WHERE 1=1"
-            params = []
+        # STEP 1: Get Ingredient IDs
+        ingredient_ids = []
+        if req.ingredients:
+            placeholders = " OR ".join(["LOWER(name) LIKE ?"] * len(req.ingredients))
+            ing_query = f"SELECT ingredient_id FROM ingredients WHERE {placeholders}"
+            ing_rows = cursor.execute(ing_query, [f"%{i.lower()}%" for i in req.ingredients]).fetchall()
+            ingredient_ids = [row["ingredient_id"] for row in ing_rows]
 
-            # Testing print statements
-            # print(req)
-            # print(query)
-            # print(params)
+        # STEP 2: Get Equipment IDs
+        equipment_ids = []
+        if req.equipments:
+            placeholders = " OR ".join(["LOWER(name) LIKE ?"] * len(req.equipments))
+            # Note: Ensure your table column is equipment_id
+            eq_query = f"SELECT equipment_id FROM equipments WHERE {placeholders}"
+            eq_rows = cursor.execute(eq_query, [f"%{e.lower()}%" for e in req.equipments]).fetchall()
+            equipment_ids = [row["equipment_id"] for row in eq_rows]
 
-            # This accounts for only if this field is filled out
-            if req.dietary and req.dietary.strip():
-                query += " AND LOWER(dietary_restrictions) LIKE ?"
-                params.append(f"%{req.dietary.lower()}%")
+        # STEP 3: Handle empty IN clauses safely
+        ing_placeholders = ",".join(["?"] * len(ingredient_ids)) if ingredient_ids else "-1"
+        eq_placeholders = ",".join(["?"] * len(equipment_ids)) if equipment_ids else "-1"
 
-            if req.nutrition_goal and req.nutrition_goal.strip():
-                query += " AND LOWER(nutrition_goal) LIKE ?"
-                params.append(f"%{req.nutrition_goal.lower()}%")
-
-            query += " LIMIT ?"
-            params.append(req.limit)
-            rows = cursor.execute(query, params).fetchall()
-
-            if not rows:
-                rows = cursor.execute("SELECT * FROM recipes LIMIT ?", (req.limit,)).fetchall()
-            
-            conn.close()
-            return [dict(row) for row in rows]
-        
-        # Step 1: Convert ingredient names → ingredient_ids
-        ingredient_query = f"""
-        SELECT ingredient_id
-        FROM ingredients
-        WHERE {" OR ".join(["LOWER(name) LIKE ?"] * len(req.ingredients))}
-        """
-
-        ingredient_rows = cursor.execute(
-            ingredient_query,
-            [f"%{i.lower()}%" for i in req.ingredients]
-        ).fetchall()
-
-        if not ingredient_rows:
-            conn.close()
-            return [] # Recipe doesn't exist
-
-        
-        ingredient_ids = [row["ingredient_id"] for row in ingredient_rows]
-        id_placeholders = ",".join(["?"] * len(ingredient_ids))
-
-        # Number of ingredients the user entered.
-        # This value is used when calculating the ingredient match percentage.
-        # It represents the total ingredients the user wants to match against recipes.
-        
-        ingredient_count = max(len(req.ingredients), 1)
-        
-        # Scoring system:
-        
-        # 1. Ingredient score:
-        # - Counts how many of the user's ingredients appear in each recipe.
-        # - Uses COUNT(ri.ingredient_id) from the recipe_ingredients table.
-        
-        # 2. Dietary score:
-        # - Adds +1 if the recipe's dietary_restrictions matches the user's dietary preference.
-        
-        # 3. Nutrition score:
-        # - Adds +1 if the recipe matches the selected nutrition_goal (High Protein, Low Carb, etc.).
-        
-        # Total score = ingredient_score + dietary_score + meal_score + nutrition_score
-        # Recipes are then sorted by the highest total_score so that the most relevant
-        # recipes appear first in the results.
-        # match % =
-        # (# matching ingredients) / (# recipe ingredients)
-
-        
+        # STEP 4: The Universal Ranking Query with CTE
         ranking_query = f""" 
-        SELECT r.*,
-        -- Ingredient Match %: Calculated by Jaccard Similarity Style Formula
-        -- Formula (Prevents recipes with many ingredients always scoring 100%): Intersection / Union * 100 
-        -- Intersection = number of matching ingredients between the user and recipe
-        -- Union = total unique ingredients between both sets
+            WITH ScoredRecipes AS (
+                SELECT r.*,
+                    -- Ingredient Scoring
+                    COUNT(DISTINCT ri.ingredient_id) as ingredient_score,
+                    COUNT(DISTINCT ria.ingredient_id) as total_ingredient_count,
+                    
+                    -- Equipment Scoring (Separate Join)
+                    COUNT(DISTINCT re.equipment_id) as equipment_score,
+                    COUNT(DISTINCT rea.equipment_id) as total_equipment_count,
+                    
+                    -- Profile Factors
+                    CASE WHEN LOWER(r.dietary_restrictions) LIKE ? THEN 1 ELSE 0 END as dietary_score,
+                    CASE WHEN LOWER(r.nutrition_goal) LIKE ? THEN 1 ELSE 0 END as nutrition_score,
+                    CASE WHEN LOWER(r.cooking_skill) LIKE ? THEN 1 ELSE 0 END as skill_score,
+                    CASE WHEN LOWER(r.cuisine) LIKE ? THEN 1 ELSE 0 END as cuisine_score,
+                    CASE WHEN CAST(r.time_minutes AS INT) <= ? THEN 1 ELSE 0 END as schedule_score
+                    
+                FROM recipes r
+                -- Ingredients Joins
+                LEFT JOIN recipe_ingredients ri ON ri.recipe_id = r.id AND ri.ingredient_id IN ({ing_placeholders})
+                LEFT JOIN recipe_ingredients ria ON ria.recipe_id = r.id
+                
+                -- Equipment Joins
+                LEFT JOIN recipe_equipments re ON re.recipe_id = r.id AND re.equipment_id IN ({eq_placeholders})
+                LEFT JOIN recipe_equipments rea ON rea.recipe_id = r.id
+                
+                GROUP BY r.id
+            )
+            SELECT *,
+                -- Total Score sums everything
+                (ingredient_score + equipment_score + dietary_score + nutrition_score + skill_score + cuisine_score + schedule_score) as total_score,
+                
+                -- Universal match percent: Earned Points / Potential Points
+                -- Potential Points = Total Ings + Total Equip + 5 Profile Factors
+                ((ingredient_score + equipment_score + dietary_score + nutrition_score + skill_score + cuisine_score + schedule_score) * 100.0 / 
+                (total_ingredient_count + total_equipment_count + 5)) as match_percent
 
-
-        COUNT(DISTINCT ri.ingredient_id) as ingredient_score,
-
-        (
-        COUNT(DISTINCT ri.ingredient_id) * 100.0 /
-        COUNT(DISTINCT ria.ingredient_id)
-        ) as ingredient_match_percent,
-
-        CASE
-            WHEN LOWER(r.dietary_restrictions) LIKE ? THEN 1
-            ELSE 0
-        END as dietary_score,
-
-        CASE
-            WHEN LOWER(r.nutrition_goal) LIKE ? THEN 1
-            ELSE 0
-        END as nutrition_score,
-
-        CASE
-            WHEN LOWER(r.cooking_skill) LIKE ? THEN 1
-            ELSE 0
-        END as skill_score,
-
-        CASE
-            WHEN LOWER(r.cuisine) LIKE ? THEN 1
-            ELSE 0
-        END as cuisine_score,
-
-        CASE
-            WHEN r.time_minutes <= ? THEN 1
-            ELSE 0
-        END as schedule_score,
-
-        (
-        COUNT(ri.ingredient_id)
-        + CASE WHEN LOWER(r.dietary_restrictions) LIKE ? THEN 1 ELSE 0 END
-        + CASE WHEN LOWER(r.nutrition_goal) LIKE ? THEN 1 ELSE 0 END
-        + CASE WHEN LOWER(r.cooking_skill) LIKE ? THEN 1 ELSE 0 END
-        + CASE WHEN LOWER(r.cuisine) LIKE ? THEN 1 ELSE 0 END
-        + CASE WHEN r.time_minutes <= ? THEN 1 ELSE 0 END
-        ) as total_score
-
-        FROM recipes r
-        LEFT JOIN recipe_ingredients ri
-        ON ri.recipe_id = r.id
-        AND ri.ingredient_id IN ({id_placeholders})
-
-        LEFT JOIN recipe_ingredients ria
-        ON ria.recipe_id = r.id
-
-        GROUP BY r.id
-        HAVING ingredient_score > 0
-        ORDER BY total_score DESC
-        LIMIT ?
+            FROM ScoredRecipes
+            ORDER BY match_percent DESC
+            LIMIT ?
         """
 
-    
+        # STEP 5: Build Params List in Strict Order
         dietary = f"%{(req.dietary or '').lower()}%"
         nutrition = f"%{(req.nutrition_goal or '').lower()}%"
         skill = f"%{(req.cooking_skill or '').lower()}%"
         cuisine = f"%{(req.cuisine_preference or '').lower()}%"
-        schedule_time = req.available_minutes or 60
-        
+        schedule_time = req.available_minutes or 1440
+
+        # Order: Profile Factors -> Ingredient IDs -> Equipment IDs -> Limit
         params = (
-            [dietary, nutrition, skill, cuisine, schedule_time]
-            + ingredient_ids
-            + [dietary, nutrition, skill, cuisine, schedule_time, req.limit]
-        )       
-        ranked_rows = cursor.execute(
-            ranking_query,
-            params
-        ).fetchall()
+            [dietary, nutrition, skill, cuisine, schedule_time] + 
+            ingredient_ids + 
+            equipment_ids + 
+            [req.limit]
+        )
+
+        ranked_rows = cursor.execute(ranking_query, params).fetchall()
         conn.close()
         return [dict(row) for row in ranked_rows]
-    
 
     except Exception as e:
-        print(f"Exception: {e}") 
+        print(f"ERROR: {e}")
         return {"error": str(e)}, 500

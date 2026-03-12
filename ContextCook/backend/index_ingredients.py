@@ -8,15 +8,16 @@ conn = sqlite3.connect("database/contextcook.db")
 cursor = conn.cursor()
 
 # Fetch all recipes
-cursor.execute("SELECT rowid, ingredients FROM recipes")
+cursor.execute("SELECT rowid, raw_ingredients FROM recipes")
 recipes = cursor.fetchall()
 
 """ Builds mapping where ingredient maps to recipe. """
 for recipe_id, ingredient_text in recipes:
 
     try:
-        ingredient_list = ast.literal_eval(ingredient_text)
-    except:
+        ingredient_list = [i.strip().lower() for i in ingredient_text.split(",")]
+    except Exception as e:
+        print(f"Failed to parse ID {recipe_id}: {e}")
         continue
 
     for ingredient in ingredient_list:
