@@ -25,6 +25,27 @@ export default function Profile() {
         nutrition_goal: [],
     });
 
+    const getMinutesUntilNextEvent = (activities) => {
+        if (!activities || activities.length === 0) return null;
+
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        const sortedEvents = [...activities].sort((a, b) => a.start.localeCompare(b.start));
+
+        const nextEvent = sortedEvents.find(event => {
+            const [hours, minutes] = event.start.split(':').map(Number);
+            return (hours * 60 + minutes) > currentMinutes;
+        });
+
+        if (!nextEvent) return 1440;
+
+        const [nextHours, nextMinutes] = nextEvent.start.split(':').map(Number);
+        const totalNextMinutes = nextHours * 60 + nextMinutes;
+        
+        return totalNextMinutes - currentMinutes;
+    };
+
     useEffect(() => {
         const fetchOptions = async () => {
             const response = await fetch(`${SERVER}/api/database-columns`);
@@ -60,13 +81,19 @@ export default function Profile() {
         const ingredientArray = ingredientInput
         ? ingredientInput.split(",").map(i => i.trim().toLowerCase()).filter(i => i.length > 0)
         : [];
+
+        const equipmentArray = kitchenEquipment
+        ? kitchenEquipment.split(",").map(i => i.trim().toLowerCase()).filter(i => i.length > 0)
+        : [];
+
         setSearchParams({
             ingredients: ingredientArray,
+            equipments: equipmentArray,
             dietary,
             nutrition_goal: nutritionGoal,
             cooking_skill: cookingSkill,
             cuisine_preference: cuisinePreference,
-            available_minutes: userSchedule?.availableMinutes || 60
+            available_minutes: getMinutesUntilNextEvent(userSchedule) || 1440
         });
 
         navigate("/recommendations");
@@ -94,6 +121,25 @@ export default function Profile() {
 
             const result = await response.json();
             console.log(result);
+            
+            const ingredientArray = ingredientInput
+            ? ingredientInput.split(",").map(i => i.trim().toLowerCase()).filter(i => i.length > 0)
+            : [];
+            
+            const equipmentArray = kitchenEquipment
+            ? kitchenEquipment.split(",").map(i => i.trim().toLowerCase()).filter(i => i.length > 0)
+            : [];
+
+            setSearchParams({
+                ingredients: ingredientArray,
+                equipments: equipmentArray,
+                dietary,
+                nutrition_goal: nutritionGoal,
+                cooking_skill: cookingSkill,
+                cuisine_preference: cuisinePreference,
+                available_minutes: getMinutesUntilNextEvent(userSchedule) || 1440
+            });
+
             alert("User profile saved");
         } catch (error) {
             console.error("Error saving profile:", error);
@@ -273,7 +319,7 @@ export default function Profile() {
                         }}
                     >
                         <option value="">Any</option>
-                        <option value="Beginnner">Beginnner</option>
+                        <option value="Beginner">Beginner</option>
                         <option value="Intermediate">Intermediate</option>
                         <option value="Advanced">Advanced</option>
                     </select>

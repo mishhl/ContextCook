@@ -15,47 +15,48 @@ export default function Recommendations() {
     const [isRecipePopUpOpen, setIsRecipePopUpOpen] = useState(false);
 
     useEffect(() => {
-    const fetchRecipes = async () => {
-        setLoading(true);
-        try {
-            let response;
+        const fetchRecipes = async () => {
+            setLoading(true);
+            try {
+                let response;
 
-            if (searchParams) {
-                response = await fetch(`${SERVER}/api/recommend`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        ingredients: searchParams?.ingredients || [],
-                        dietary: searchParams?.dietary || "",
-                        nutrition_goal: searchParams?.nutrition_goal || "",
-                        cooking_skill: searchParams?.cooking_skill || "",
-                        cuisine_preference: searchParams?.cuisine_preference || "",
-                        available_minutes: searchParams?.available_minutes || 60,
-                        meal_time: searchParams?.meal_time || "",
-                        limit: recipeCount
-                    })
-                });
-            } else {
-                response = await fetch(`${SERVER}/api/recipes?limit=${recipeCount}`);
+                if (searchParams) {
+                    response = await fetch(`${SERVER}/api/recommend`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            ingredients: searchParams?.ingredients || [],
+                            equipments: searchParams?.equipments || [],
+                            dietary: searchParams?.dietary || "",
+                            nutrition_goal: searchParams?.nutrition_goal || "",
+                            cooking_skill: searchParams?.cooking_skill || "",
+                            cuisine_preference: searchParams?.cuisine_preference || "",
+                            available_minutes: searchParams?.available_minutes || 1440,
+                            meal_time: searchParams?.meal_time || "",
+                            limit: recipeCount
+                        })
+                    });
+                } else {
+                    response = await fetch(`${SERVER}/api/recipes?limit=${recipeCount}`);
+                }
+                
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    // /api/recommend
+                    setRecipes(data);
+                } else if (Array.isArray(data.recipes)) {
+                    // /api/recipes
+                    setRecipes(data.recipes);
+                } else {
+                    console.error("Unexpected API response:", data);
+                    setRecipes([]);
+                }
+            } catch (error) {
+                console.error("Error fetching recipes:", error);
+            } finally {
+                setLoading(false);
             }
-            
-            const data = await response.json();
-            if (Array.isArray(data)) {
-                // /api/recommend
-                setRecipes(data);
-            } else if (Array.isArray(data.recipes)) {
-                // /api/recipes
-                setRecipes(data.recipes);
-            } else {
-                console.error("Unexpected API response:", data);
-                setRecipes([]);
-            }
-        } catch (error) {
-            console.error("Error fetching recipes:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
 
         fetchRecipes();
     }, [searchParams, recipeCount]); 
@@ -71,9 +72,9 @@ export default function Recommendations() {
             <div className="recipe-grid" key={recipeCount}>
                 {Array.isArray(recipes) && recipes.slice(0, recipeCount).map((recipe) => (
                     <div key={recipe.id} className="card" onClick={() => {setIsRecipePopUpOpen(true); setRecipeId(recipe.id); }}>
-                        {recipe.ingredient_match_percent !== undefined && (
+                        {recipe.match_percent !== undefined && (
                             <span className="match-score">
-                                {Math.min(Math.round(recipe.ingredient_match_percent), 100)}% match
+                                {Math.min(Math.round(recipe.match_percent), 100)}% match
                             </span>
                         )}
                         
@@ -82,37 +83,46 @@ export default function Recommendations() {
                                 <h2 className="title">{recipe.title}</h2>
                             </div>
                         
-                        <div className="bottom-content">
-                            <p className="tag">{recipe.dietary_restrictions}</p>
-                            
-                            {/* Recommendation reasons */}
-                            <div className="recommendation-reasons">
-                                {recipe.ingredient_score > 0 && (
-                                    <p>✔ {recipe.ingredient_score} ingredient match{recipe.ingredient_score > 1 ? "es" : ""}</p>
-                                )}
+                            <div className="bottom-content">                                
+                                {/* Recommendation reasons */}
+                                <div className="recommendation-reasons">
+                                    {recipe.ingredient_score > 0 && (
+                                        <p>✔ {recipe.ingredient_score} ingredient match{recipe.ingredient_score > 1 ? "es" : ""}</p>
+                                    )}
 
-                                {recipe.cuisine_score === 1 && (
-                                    <p>✔ Matches your cuisine preference</p>
-                                )}
+                                    {recipe.equipment_score > 0 && (
+                                        <p>✔ {recipe.equipment_score} equipment match{recipe.equipment_score > 1 ? "es" : ""}</p>
+                                    )}
 
-                                {recipe.skill_score === 1 && (
-                                    <p>✔ Suitable for your cooking skill</p>
-                                )}
+                                    {recipe.cuisine_score === 1 && (
+                                        <p>✔ Matches your cuisine preference</p>
+                                    )}
 
-                                {recipe.schedule_score === 1 && (
-                                    <p>✔ Fits your available cooking time</p>
-                                )}
+                                    {recipe.skill_score === 1 && (
+                                        <p>✔ Suitable for your cooking skill</p>
+                                    )}
+
+                                    {recipe.schedule_score === 1 && (
+                                        <p>✔ Fits your available cooking time</p>
+                                    )}
+                                    {recipe.nutrition_score === 1 && (
+                                        <p>✔ Fits your nutrition goal</p>
+                                    )}
+                                    {recipe.dietary_score === 1 && (
+                                        <p>✔ Fits your dietary restriction</p>
+                                    )}
+                                </div>
                             </div>
-                            <p className="time">{recipe.time_minutes} min</p>
-                        </div>
                         </div>
                         
+                        <p className="time">{recipe.time_minutes} min</p>
+
                         <div className="image-container">
-                        <img 
-                            src={`${SERVER}/images/${recipe.image_name}.jpg`} 
-                            alt={recipe.title} 
-                            style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
-                        />
+                            <img 
+                                src={`${SERVER}/images/${recipe.image_name}.jpg`} 
+                                alt={recipe.title} 
+                                style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
+                            />
                         </div>
                     </div>
                 ))}
