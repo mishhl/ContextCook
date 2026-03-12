@@ -76,29 +76,6 @@ export default function Profile() {
         setUserSchedule(activities);
     };
 
-    const handleGenerate = () => {
-
-        const ingredientArray = ingredientInput
-        ? ingredientInput.split(",").map(i => i.trim().toLowerCase()).filter(i => i.length > 0)
-        : [];
-
-        const equipmentArray = kitchenEquipment
-        ? kitchenEquipment.split(",").map(i => i.trim().toLowerCase()).filter(i => i.length > 0)
-        : [];
-
-        setSearchParams({
-            ingredients: ingredientArray,
-            equipments: equipmentArray,
-            dietary,
-            nutrition_goal: nutritionGoal,
-            cooking_skill: cookingSkill,
-            cuisine_preference: cuisinePreference,
-            available_minutes: getMinutesUntilNextEvent(userSchedule) || 1440
-        });
-
-        navigate("/recommendations");
-    };
-
     const saveProfile = async () => {
         const profileData = {
             ingredients: ingredientInput,
@@ -391,34 +368,18 @@ export default function Profile() {
                     />
                 </div>
 
-                <div style={{padding: "16px", display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-                    <button
-                        onClick={handleGenerate}
-                        style={{
-                            width: "40%",
-                            padding: "12px",
-                            borderRadius: "8px",
-                            border: "none",
-                            background: "#2C2C2C",
-                            color: "white",
-                            fontWeight: "600",
-                            cursor: "pointer"
-                        }}
-                    >
-                        Generate Recipes
-                    </button>
-
+                <div style={{padding: "16px", display: "flex", flexDirection: "row", justifyContent: "center"}}>
                     <button
                         onClick={saveProfile}
                         style={{
-                            width: "40%",
+                            width: "100%",
                             padding: "12px",
                             borderRadius: "8px",
                             border: "none",
                             background: "#2C2C2C",
                             color: "white",
                             fontWeight: "600",
-                            cursor: "pointer"
+                            cursor: "pointer",
                         }}
                     >
                         Save Profile
